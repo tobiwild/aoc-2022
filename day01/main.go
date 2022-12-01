@@ -21,16 +21,20 @@ func run() error {
 	var maxSums [3]int
 	currentSum := 0
 
+	updateMaxSums := func() {
+		for i, maxSum := range maxSums {
+			if currentSum > maxSum {
+				maxSums[i] = currentSum
+				break
+			}
+		}
+	}
+
 	for fileScanner.Scan() {
 		line := fileScanner.Text()
 
 		if line == "" {
-			for i, maxSum := range maxSums {
-				if currentSum > maxSum {
-					maxSums[i] = currentSum
-					break
-				}
-			}
+			updateMaxSums()
 			currentSum = 0
 			continue
 		}
@@ -41,12 +45,7 @@ func run() error {
 		}
 		currentSum += number
 	}
-	for i, maxSum := range maxSums {
-		if currentSum > maxSum {
-			maxSums[i] = currentSum
-			break
-		}
-	}
+	updateMaxSums()
 
 	fmt.Printf("Part 1 result: %v\n", maxSums[0])
 
