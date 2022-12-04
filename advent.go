@@ -32,9 +32,9 @@ func BenchmarkSolve[T any](b *testing.B, solve func(io.Reader) (T, error), files
 		// Read whole file to not benchmark IO performance
 		content, err := os.ReadFile(file)
 		require.NoError(b, err)
-		reader := bytes.NewReader(content)
 		b.Run(file, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
+				reader := bytes.NewReader(content)
 				_, err := solve(reader)
 				require.NoError(b, err)
 			}
