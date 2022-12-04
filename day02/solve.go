@@ -1,21 +1,14 @@
-package main
+package day02
 
 import (
 	"bufio"
 	"fmt"
-	"log"
-	"os"
+	"io"
 )
 
-func run() error {
-	readFile, err := os.Open("input.txt")
-
-	if err != nil {
-		return err
-	}
-	fileScanner := bufio.NewScanner(readFile)
-	fileScanner.Split(bufio.ScanLines)
-	defer readFile.Close()
+func Solve(r io.Reader) ([]int, error) {
+	scanner := bufio.NewScanner(r)
+	scanner.Split(bufio.ScanLines)
 
 	rock := 1
 	paper := 2
@@ -104,31 +97,21 @@ func run() error {
 
 	var totalScore1 int
 	var totalScore2 int
-	for fileScanner.Scan() {
-		line := fileScanner.Text()
+	for scanner.Scan() {
+		line := scanner.Text()
 
 		if score, ok := scoreMap1[line]; ok {
 			totalScore1 += score
 		} else {
-			return fmt.Errorf("Invalid input: %v", line)
+			return nil, fmt.Errorf("Invalid input: %v", line)
 		}
 
 		if score, ok := scoreMap2[line]; ok {
 			totalScore2 += score
 		} else {
-			return fmt.Errorf("Invalid input: %v", line)
+			return nil, fmt.Errorf("Invalid input: %v", line)
 		}
 	}
 
-	fmt.Printf("Part 1 result: %v\n", totalScore1)
-
-	fmt.Printf("Part 2 result: %v\n", totalScore2)
-
-	return nil
-}
-
-func main() {
-	if err := run(); err != nil {
-		log.Fatal(err)
-	}
+	return []int{totalScore1, totalScore2}, nil
 }

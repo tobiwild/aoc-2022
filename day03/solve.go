@@ -1,22 +1,14 @@
-package main
+package day03
 
 import (
 	"bufio"
-	"fmt"
-	"log"
-	"os"
+	"io"
 	"unicode/utf8"
 )
 
-func run() error {
-	readFile, err := os.Open("input.txt")
-
-	if err != nil {
-		return err
-	}
-	fileScanner := bufio.NewScanner(readFile)
-	fileScanner.Split(bufio.ScanLines)
-	defer readFile.Close()
+func Solve(r io.Reader) ([]int, error) {
+	scanner := bufio.NewScanner(r)
+	scanner.Split(bufio.ScanLines)
 
 	getPriority := func(c rune) int {
 		if c <= 'Z' {
@@ -29,8 +21,8 @@ func run() error {
 	var groupSum int
 	groupMap := make(map[rune]int)
 
-	for fileScanner.Scan() {
-		line := fileScanner.Text()
+	for scanner.Scan() {
+		line := scanner.Text()
 
 		{
 			cMap := make(map[rune]struct{})
@@ -64,15 +56,5 @@ func run() error {
 		}
 	}
 
-	fmt.Printf("Part 1 result: %v\n", lineSum)
-
-	fmt.Printf("Part 2 result: %v\n", groupSum)
-
-	return nil
-}
-
-func main() {
-	if err := run(); err != nil {
-		log.Fatal(err)
-	}
+	return []int{lineSum, groupSum}, nil
 }
