@@ -1,4 +1,4 @@
-package scaffold
+package puzzle
 
 import (
 	"testing"

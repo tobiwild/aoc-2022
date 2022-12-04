@@ -1,4 +1,4 @@
-package day04
+package puzzle
 
 import (
 	"bufio"
