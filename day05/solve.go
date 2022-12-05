@@ -65,9 +65,8 @@ func Solve(r io.Reader) ([]string, error) {
 
 		for i := 0; i < count; i++ {
 			flen := len(stacks1[from])
-			top := stacks1[from][flen-1]
+			stacks1[to] = append(stacks1[to], stacks1[from][flen-1])
 			stacks1[from] = stacks1[from][:flen-1]
-			stacks1[to] = append(stacks1[to], top)
 		}
 
 		{
