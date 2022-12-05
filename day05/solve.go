@@ -4,32 +4,26 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"regexp"
-	"strconv"
 )
-
-var numberRegexp = regexp.MustCompile(`\d+`)
 
 func Solve(r io.Reader) ([]string, error) {
 	scanner := bufio.NewScanner(r)
 	scanner.Split(bufio.ScanLines)
 
-	var cargoLines []string
 	scanningCargoLines := true
 
 	var stacks1 [][]string
 	var stacks2 [][]string
 
-	createStacks := func(stacks [][]string) [][]string {
-		for i := len(cargoLines) - 2; i >= 0; i-- {
-			for ci, c := range cargoLines[i] {
-				stackIndex := ((ci + 3) / 4) - 1
-				if stackIndex > len(stacks)-1 {
-					stacks = append(stacks, []string{})
+	updateStacks := func(stacks [][]string, line string) [][]string {
+		for i, c := range line {
+			if c >= 'A' && c <= 'Z' {
+				if stacks == nil {
+					stacks = make([][]string, (len(line)+1)/4)
 				}
-				if c >= 'A' && c <= 'Z' {
-					stacks[stackIndex] = append(stacks[stackIndex], string(c))
-				}
+				si := i / 4
+				stacks[si] = append([]string{string(c)}, stacks[si]...)
+				continue
 			}
 		}
 		return stacks
@@ -40,39 +34,32 @@ func Solve(r io.Reader) ([]string, error) {
 
 		if scanningCargoLines {
 			if line == "" {
-				stacks1 = createStacks(stacks1)
-				stacks2 = createStacks(stacks2)
 				scanningCargoLines = false
 				continue
 			}
-			cargoLines = append(cargoLines, line)
+			stacks1 = updateStacks(stacks1, line)
+			stacks2 = updateStacks(stacks2, line)
 			continue
 		}
 
-		var nums []int
-		numStrings := numberRegexp.FindAllString(line, 3)
-		for _, numString := range numStrings {
-			num, err := strconv.Atoi(string(numString))
-			if err != nil {
-				return nil, err
-			}
-			nums = append(nums, num)
+		var count, from, to int
+		_, err := fmt.Sscanf(line, "move %d from %d to %d", &count, &from, &to)
+		if err != nil {
+			return nil, err
 		}
-		if len(nums) != 3 {
-			return nil, fmt.Errorf("Invalid line: %v", line)
-		}
-		count, from, to := nums[0], nums[1]-1, nums[2]-1
+		from--
+		to--
 
 		for i := 0; i < count; i++ {
-			flen := len(stacks1[from])
-			stacks1[to] = append(stacks1[to], stacks1[from][flen-1])
-			stacks1[from] = stacks1[from][:flen-1]
+			idx := len(stacks1[from]) - 1
+			stacks1[to] = append(stacks1[to], stacks1[from][idx])
+			stacks1[from] = stacks1[from][:idx]
 		}
 
 		{
-			flen := len(stacks2[from]) - count
-			stacks2[to] = append(stacks2[to], stacks2[from][flen:]...)
-			stacks2[from] = stacks2[from][:flen]
+			idx := len(stacks2[from]) - count
+			stacks2[to] = append(stacks2[to], stacks2[from][idx:]...)
+			stacks2[from] = stacks2[from][:idx]
 		}
 	}
 
