@@ -45,8 +45,6 @@ func Solve(r io.Reader) ([]int, error) {
 		}
 		if len(result) == 1 && lastXUnique(14) {
 			result = append(result, pos)
-		}
-		if len(result) == 2 {
 			break
 		}
 	}
