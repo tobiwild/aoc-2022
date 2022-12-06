@@ -5,16 +5,25 @@ import (
 	"io"
 )
 
+const MAX_SIZE = 14
+
 func Solve(r io.Reader) ([]int, error) {
 	scanner := bufio.NewScanner(r)
+	// alternative: scan runes
 	scanner.Split(bufio.ScanBytes)
 
 	var bytes []byte
-	var result1, result2 *int
+	var result []int
 
+	var pos int
 	for scanner.Scan() {
+		pos++
 		bytes = append(bytes, scanner.Bytes()[0])
-		blen := len(bytes)
+		blen := pos
+		if blen > MAX_SIZE {
+			bytes = bytes[1:]
+			blen = MAX_SIZE
+		}
 
 		lastXUnique := func(count int) bool {
 			if blen < count {
@@ -31,16 +40,16 @@ func Solve(r io.Reader) ([]int, error) {
 			return true
 		}
 
-		if result1 == nil && lastXUnique(4) {
-			result1 = &blen
+		if len(result) == 0 && lastXUnique(4) {
+			result = append(result, pos)
 		}
-		if result2 == nil && lastXUnique(14) {
-			result2 = &blen
+		if len(result) == 1 && lastXUnique(14) {
+			result = append(result, pos)
 		}
-		if result1 != nil && result2 != nil {
-			return []int{*result1, *result2}, nil
+		if len(result) == 2 {
+			break
 		}
 	}
 
-	return []int{}, nil
+	return result, nil
 }
