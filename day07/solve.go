@@ -10,15 +10,16 @@ import (
 const DISK_SPACE = 70000000
 const REQUIRED_FREE_DISK_SPACE = 30000000
 
-func Solve(r io.Reader) ([]int, error) {
+func getDirSizes(r io.Reader) map[string]int {
 	scanner := bufio.NewScanner(r)
 	scanner.Split(bufio.ScanLines)
 
 	dirSizes := make(map[string]int)
-	var dirStack []string
-	var size int
 
+	var dirStack []string
+	var curSize int
 	var curDir string
+
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -35,13 +36,19 @@ func Solve(r io.Reader) ([]int, error) {
 			continue
 		}
 
-		if _, err := fmt.Sscanf(line, "%d", &size); err == nil {
+		if _, err := fmt.Sscanf(line, "%d", &curSize); err == nil {
 			for i := 0; i <= len(dirStack); i++ {
 				key := "/" + strings.Join(dirStack[:i], "/")
-				dirSizes[key] += size
+				dirSizes[key] += curSize
 			}
 		}
 	}
+
+	return dirSizes
+}
+
+func Solve(r io.Reader) ([]int, error) {
+	dirSizes := getDirSizes(r)
 
 	var result1 int
 	for _, size := range dirSizes {
