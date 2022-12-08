@@ -37,9 +37,11 @@ func getDirSizes(r io.Reader) map[string]int {
 		}
 
 		if _, err := fmt.Sscanf(line, "%d", &curSize); err == nil {
-			for i := 0; i <= len(dirStack); i++ {
-				key := "/" + strings.Join(dirStack[:i], "/")
-				dirSizes[key] += curSize
+			dirSizes["/"] += curSize
+			var key strings.Builder
+			for _, dir := range dirStack {
+				key.WriteString("/" + dir)
+				dirSizes[key.String()] += curSize
 			}
 		}
 	}
@@ -50,19 +52,16 @@ func getDirSizes(r io.Reader) map[string]int {
 func Solve(r io.Reader) ([]int, error) {
 	dirSizes := getDirSizes(r)
 
-	var result1 int
-	for _, size := range dirSizes {
-		if size <= 100000 {
-			result1 += size
-		}
-	}
+	var result1, deleteSize int
 
 	usedSpace := dirSizes["/"]
 	unusedSpace := DISK_SPACE - usedSpace
 	minDeleteSize := REQUIRED_FREE_DISK_SPACE - unusedSpace
 
-	var deleteSize int
 	for _, size := range dirSizes {
+		if size <= 100000 {
+			result1 += size
+		}
 		if size < minDeleteSize {
 			continue
 		}
