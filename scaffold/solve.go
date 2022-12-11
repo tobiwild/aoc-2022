@@ -6,10 +6,10 @@ import (
 )
 
 func Solve(r io.Reader) ([]int, error) {
-	scanner := bufio.NewScanner(r)
-	scanner.Split(bufio.ScanLines)
+	sc := bufio.NewScanner(r)
+	sc.Split(bufio.ScanLines)
 
-	for scanner.Scan() {
+	for sc.Scan() {
 		// line := scanner.Text()
 	}
 

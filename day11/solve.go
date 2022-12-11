@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
-	"strings"
 )
 
 type operand int
@@ -29,9 +28,10 @@ type test struct {
 }
 
 type monkey struct {
-	items     []int
-	operation operation
-	test      test
+	items        []int
+	operation    operation
+	test         test
+	inspectCount int
 }
 
 func copyMonkeys(monkeys []monkey) []monkey {
@@ -49,48 +49,51 @@ var (
 	numberRegexp = regexp.MustCompile(`\d+`)
 )
 
+// better error message
+func sscanf(str string, format string, a ...any) error {
+	_, err := fmt.Sscanf(str, format, a...)
+	if err != nil {
+		return fmt.Errorf("Line %q does not match %q: %w", str, format, err)
+	}
+	return nil
+}
+
 func Solve(r io.Reader) ([]int, error) {
-	scanner := bufio.NewScanner(r)
-	scanner.Split(bufio.ScanLines)
+	sc := bufio.NewScanner(r)
+	sc.Split(bufio.ScanLines)
 
 	var monkeys []monkey
 
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if strings.HasPrefix(line, "Monkey") {
-			monkeys = append(monkeys, monkey{})
+	for sc.Scan() {
+		if sc.Text() == "" {
 			continue
 		}
 
-		if len(monkeys) == 0 {
-			return nil, fmt.Errorf("No active monkey")
-		}
+		// Monkey 1:
+		m := monkey{}
 
-		curMonkey := &monkeys[len(monkeys)-1]
-
-		line = strings.TrimSpace(line)
-
-		if strings.HasPrefix(line, "Starting items:") {
-			numStrings := numberRegexp.FindAllString(line, -1)
+		// Starting items: 54, 65, 75, 74
+		{
+			sc.Scan()
+			numStrings := numberRegexp.FindAllString(sc.Text(), -1)
 			for _, numStr := range numStrings {
 				num, err := strconv.Atoi(numStr)
 				if err != nil {
 					return nil, err
 				}
-				curMonkey.items = append(curMonkey.items, num)
+				m.items = append(m.items, num)
 			}
-			continue
 		}
 
-		if strings.HasPrefix(line, "Operation:") {
+		// Operation: new = old + 6
+		{
+			sc.Scan()
 			var operandStr, valueString string
-
-			if _, err := fmt.Sscanf(line, "Operation: new = old %s %s", &operandStr, &valueString); err != nil {
-				return nil, fmt.Errorf("Line %q invalid: %v", line, err)
+			if err := sscanf(sc.Text(), " Operation: new = old %s %s", &operandStr, &valueString); err != nil {
+				return nil, err
 			}
 			if value, err := strconv.Atoi(valueString); err == nil {
-				curMonkey.operation.value = &value
+				m.operation.value = &value
 			}
 			var operand operand
 			if operandStr == "+" {
@@ -100,32 +103,34 @@ func Solve(r io.Reader) ([]int, error) {
 			} else {
 				return nil, fmt.Errorf("Unknown operand %v", operandStr)
 			}
-			curMonkey.operation.operand = operand
-			continue
+			m.operation.operand = operand
 		}
 
-		if strings.HasPrefix(line, "Test:") {
-			var divisibleBy int
-			if _, err := fmt.Sscanf(line, "Test: divisible by %d", &divisibleBy); err != nil {
-				return nil, fmt.Errorf("Line %q invalid: %v", line, err)
+		// Test: divisible by 19
+		{
+			sc.Scan()
+			if err := sscanf(sc.Text(), " Test: divisible by %d", &m.test.divisibleBy); err != nil {
+				return nil, err
 			}
-			curMonkey.test.divisibleBy = divisibleBy
-			continue
 		}
 
-		if strings.HasPrefix(line, "If") {
-			var boolValue string
-			var toMonkey int
-			if _, err := fmt.Sscanf(line, "If %s throw to monkey %d", &boolValue, &toMonkey); err != nil {
-				return nil, fmt.Errorf("Line %q invalid: %v", line, err)
+		// If true: throw to monkey 2
+		{
+			sc.Scan()
+			if err := sscanf(sc.Text(), " If true: throw to monkey %d", &m.test.trueMonkey); err != nil {
+				return nil, err
 			}
-			if boolValue == "true:" {
-				curMonkey.test.trueMonkey = toMonkey
-			} else {
-				curMonkey.test.falseMonkey = toMonkey
-			}
-			continue
 		}
+
+		// If false: throw to monkey 0
+		{
+			sc.Scan()
+			if err := sscanf(sc.Text(), " If false: throw to monkey %d", &m.test.falseMonkey); err != nil {
+				return nil, err
+			}
+		}
+
+		monkeys = append(monkeys, m)
 	}
 
 	// A = level
@@ -149,11 +154,10 @@ func Solve(r io.Reader) ([]int, error) {
 	}
 
 	play := func(monkeys []monkey, rounds int, divideLevel bool) int {
-		inspections := make(map[int]int)
 		for round := 0; round < rounds; round++ {
 			for mi, monkey := range monkeys {
 				for _, item := range monkey.items {
-					inspections[mi]++
+					monkeys[mi].inspectCount++
 					level := item
 					value := level
 					if monkey.operation.value != nil {
@@ -179,13 +183,13 @@ func Solve(r io.Reader) ([]int, error) {
 				monkeys[mi].items = nil
 			}
 		}
-		inspectionCounts := make([]int, len(inspections))
-		for i, count := range inspections {
-			inspectionCounts[i] = count
+		inspections := make([]int, len(monkeys))
+		for i, monkey := range monkeys {
+			inspections[i] = monkey.inspectCount
 		}
-		sort.Ints(inspectionCounts)
-		l := len(inspectionCounts)
-		return inspectionCounts[l-2] * inspectionCounts[l-1]
+		sort.Ints(inspections)
+		l := len(inspections)
+		return inspections[l-2] * inspections[l-1]
 	}
 
 	monkeyBusiness1 := play(copyMonkeys(monkeys), 20, true)
