@@ -22,6 +22,7 @@ func TestSolve[T any](t *testing.T, solve func(io.Reader) (T, error), tests []Te
 			defer file.Close()
 			result, err := solve(file)
 			require.NoError(t, err)
+			t.Logf("RESULT: %+v", result)
 			require.Equal(t, test.Expected, result)
 		})
 	}
