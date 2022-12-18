@@ -10,7 +10,7 @@ func Solve(r io.Reader) ([]int, error) {
 	sc.Split(bufio.ScanLines)
 
 	for sc.Scan() {
-		// line := scanner.Text()
+		// line := sc.Text()
 	}
 
 	return []int{}, nil
