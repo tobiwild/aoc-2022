@@ -12,10 +12,10 @@ func TestSolve(t *testing.T) {
 			File:     "input_sample.txt",
 			Expected: []int{},
 		},
-		{
-			File:     "input.txt",
-			Expected: []int{},
-		},
+		// {
+		// 	File:     "input.txt",
+		// 	Expected: []int{},
+		// },
 	})
 }
 
