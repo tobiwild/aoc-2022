@@ -100,19 +100,29 @@ func (c cave) insertSand() bool {
 	current := pos{x: 500, y: 0}
 	for c.insertable(current) {
 		next := current
+
 		next.y++
-		if c.blockedAt(next) {
-			next.x--
-			if c.blockedAt(next) {
-				next.x += 2
-				if c.blockedAt(next) {
-					c.add(current)
-					return true
-				}
-			}
+		if !c.blockedAt(next) {
+			current = next
+			continue
 		}
-		current = next
+
+		next.x--
+		if !c.blockedAt(next) {
+			current = next
+			continue
+		}
+
+		next.x += 2
+		if !c.blockedAt(next) {
+			current = next
+			continue
+		}
+
+		c.add(current)
+		return true
 	}
+
 	return false
 }
 
