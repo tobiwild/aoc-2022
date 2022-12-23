@@ -73,6 +73,28 @@ func (rngs rngs) length() int {
 	return result
 }
 
+func (rngs rngs) getFirstExcluded(rng rng) (int, bool) {
+	if len(rngs) == 0 {
+		return rng.min, true
+	}
+
+	min := rng.min
+	for _, r := range rngs {
+		if rng.max < r.min {
+			break
+		}
+		if rng.min > r.max {
+			continue
+		}
+		if min < r.min {
+			return max(min, rng.min), true
+		}
+		min = r.max + 1
+	}
+
+	return 0, false
+}
+
 func getRange(start, end pos, y int) rng {
 	dx := abs(start.x - end.x)
 	dy := abs(start.y - end.y)
@@ -138,35 +160,17 @@ func (p puzzle) Solve(r io.Reader) ([]int, error) {
 
 	result1 := pairs.beaconFreeRanges(p.part1Y).length() - pairs.beaconCount(p.part1Y)
 
-	min := 0
-	max := p.part2Max
-	getTuningFrequency := func() int {
-		for y := min; y <= max; y++ {
-			rngs := pairs.beaconFreeRanges(y)
-			if len(rngs) == 0 {
-				continue
-			}
-			if len(rngs) == 1 && rngs[0].min <= min && rngs[0].max >= max {
-				continue
-			}
-			for x := min; x <= max; x++ {
-				included := func() bool {
-					for _, rng := range rngs {
-						if x >= rng.min && x <= rng.max {
-							return true
-						}
-					}
-					return false
-				}
-				if !included() {
-					return x*4000000 + y
-				}
+	getTuningFrequency := func(rng rng) int {
+		for y := rng.min; y <= rng.max; y++ {
+			x, found := pairs.beaconFreeRanges(y).getFirstExcluded(rng)
+			if found {
+				return x*4000000 + y
 			}
 		}
 		return 0
 	}
 
-	result2 := getTuningFrequency()
+	result2 := getTuningFrequency(rng{min: 0, max: p.part2Max})
 
 	return []int{result1, result2}, nil
 }
